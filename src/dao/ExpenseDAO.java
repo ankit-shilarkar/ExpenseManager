@@ -1,9 +1,12 @@
 package dao;
 
+import model.Expense;
 import util.DBUtil;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ExpenseDAO {
 
@@ -45,4 +48,31 @@ public class ExpenseDAO {
 
         return 0.0;
     }
+
+    @org.jetbrains.annotations.NotNull
+    public static List<Expense> getMonthlyExpenses(String username, String monthYear) {
+        List<model.Expense> expenses = new ArrayList<>();
+
+        try (Connection conn = DBUtil.getConnection()) {
+            String sql = "SELECT amount, category, description, date FROM expenses WHERE username = ? AND DATE_FORMAT(date, '%Y-%m') = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, username);
+            stmt.setString(2, monthYear);
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                double amount = rs.getDouble("amount");
+                String category = rs.getString("category");
+                String description = rs.getString("description");
+                LocalDate date = rs.getDate("date").toLocalDate();
+
+                expenses.add(new model.Expense(amount, category, description, date));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return expenses;
+    }
+
 }

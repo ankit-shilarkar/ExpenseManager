@@ -11,6 +11,7 @@ public class DashboardUI extends JFrame {
     private JButton addExpenseButton;
     private JButton setBudgetButton;
     private JButton logoutButton;
+    private JButton viewHistoryButton;
 
     private String username;
 
@@ -60,12 +61,14 @@ public class DashboardUI extends JFrame {
         setBudgetButton = new JButton("Set Monthly Budget");
         addExpenseButton = new JButton("Add Expense");
         logoutButton = new JButton("Logout");
+        viewHistoryButton = new JButton("View Expense History");
 
         panel.add(welcomeLabel);
         panel.add(budgetLabel);
         panel.add(spentLabel);
         panel.add(setBudgetButton);
         panel.add(addExpenseButton);
+        panel.add(viewHistoryButton);
         panel.add(logoutButton);
 
         add(panel);
@@ -80,7 +83,26 @@ public class DashboardUI extends JFrame {
                     JOptionPane.YES_NO_OPTION
             );
             if (choice == JOptionPane.YES_OPTION) {
-                setBudgetButton.doClick(); // simulate button click
+                SwingUtilities.invokeLater(() -> {
+                    String amountStr = JOptionPane.showInputDialog(DashboardUI.this, "Enter monthly budget (₹):");
+
+                    if (amountStr != null && !amountStr.trim().isEmpty()) {
+                        try {
+                            double amount = Double.parseDouble(amountStr);
+                            boolean success = dao.BudgetDAO.setBudget(username, monthYear, amount);
+
+                            if (success) {
+                                JOptionPane.showMessageDialog(DashboardUI.this, "Budget set for " + monthYear);
+                                updateBudgetLabels(); // Refresh display
+                            } else {
+                                JOptionPane.showMessageDialog(DashboardUI.this, "Failed to set budget.");
+                            }
+
+                        } catch (NumberFormatException ex) {
+                            JOptionPane.showMessageDialog(DashboardUI.this, "Invalid amount.");
+                        }
+                    }
+                });
             }
         } else {
             updateBudgetLabels();
@@ -157,5 +179,7 @@ public class DashboardUI extends JFrame {
                 new ui.LoginUI(); // Launch LoginUI
             }
         });
+        viewHistoryButton.addActionListener(e -> new ExpenseHistoryUI(username));
+
     }
 }
